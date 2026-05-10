@@ -1,0 +1,10 @@
+# Create a new task
+POST http://localhost:8080/tasks
+
+{
+    "description": "My first task",
+    "status": "PENDING"
+}
+
+
+
