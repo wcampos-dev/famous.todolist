@@ -1,14 +1,12 @@
 package dev.wcampos.famous.todolist.controller;
 
 
-import ch.qos.logback.core.encoder.EchoEncoder;
-import dev.wcampos.famous.todolist.model.Status;
+import dev.wcampos.famous.todolist.repository.TaskRepository;
 import dev.wcampos.famous.todolist.util.TestUtils;
-import org.junit.jupiter.api.MethodOrderer;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.context.TestComponent;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
@@ -23,6 +21,13 @@ public class TaskControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
+    @Autowired
+    private TaskRepository taskRepository;
+
+    @BeforeEach
+    void cleanDatabase() {
+        taskRepository.deleteAll();
+    }
 
     // **Create**
 
@@ -68,9 +73,14 @@ public class TaskControllerTest {
 
     @Test
     void shouldReturnTaskById() throws Exception {
+        // Create task
         TestUtils.createTask(mockMvc);
 
-        mockMvc.perform(get("/tasks/1"))
+        //Get actual id
+        Long id = TestUtils.getIdFromTask(mockMvc);
+
+
+        mockMvc.perform(get("/tasks/" + id))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.description").value("My New Task"));
     }
@@ -132,8 +142,11 @@ public class TaskControllerTest {
         //Create a PENDING status task
         TestUtils.createTask(mockMvc);
 
+        //Get actual Id
+        Long id = TestUtils.getIdFromTask(mockMvc);
+
         //Update status to DOING
-        mockMvc.perform(put("/tasks/1/status")
+        mockMvc.perform(put("/tasks/" + id + "/status")
                 .param("newStatus", "DOING"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("DOING"));
@@ -154,8 +167,10 @@ public class TaskControllerTest {
         // Create a new Task to delete later on
         TestUtils.createTask(mockMvc);
 
+        Long id = TestUtils.getIdFromTask(mockMvc);
+
         // Delete created Task (Id = 1)
-        mockMvc.perform(delete("/tasks/1"))
+        mockMvc.perform(delete("/tasks/" + id))
                 .andExpect(status().isOk())
                 .andExpect(content().string("Task successfully deleted!"));
 
