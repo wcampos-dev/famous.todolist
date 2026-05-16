@@ -1,6 +1,8 @@
 package dev.wcampos.famous.todolist.util;
 
 import com.jayway.jsonpath.JsonPath;
+import dev.wcampos.famous.todolist.model.Status;
+import dev.wcampos.famous.todolist.model.Task;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
@@ -13,6 +15,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 public class TestUtils {
 
     // Helper to create Tasks by MockMvc
+
+    // ** TaskControllerTest helper
 
     // New Task autofill description and status
     public static void createTask(MockMvc mockMvc) throws Exception {
@@ -41,6 +45,14 @@ public class TestUtils {
         String response = result.getResponse().getContentAsString();
         return JsonPath.parse(response).read("$[0].id", Long.class);
     }
+
+    // ** TaskServiceTest helper
+
+    public static Task sampleTask(Long id, String description, Status status) {
+        return new Task(id, description, status);
+    }
+
+
 
 
 }
