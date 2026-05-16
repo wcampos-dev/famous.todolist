@@ -17,7 +17,7 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
 
     // Personalized query
     // Find by description keyword
-    @Query("SELECT t FROM Task t WHERE LOWER(t.description) LIKE :keyword")
+    @Query("SELECT t FROM Task t WHERE LOWER(t.description) LIKE LOWER(CONCAT('%',:keyword, '%'))")
     List<Task> findByDescriptionContaining(@Param("keyword") String keyword);
 
 }
