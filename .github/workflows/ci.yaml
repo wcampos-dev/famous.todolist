@@ -1,0 +1,34 @@
+name: Famous Tasks CI
+
+on:
+    push:
+        branches:
+            - "develop"
+            - "main"
+    pull_request:
+        branches:
+            - "develop"
+            - "main"
+
+    jobs:
+        build:
+            runs-on: ubuntu-latest
+
+        steps:
+            - name: Checkout Code
+              uses: actions/checkout@v3
+
+            - name: JDK Configuration
+              uses: actions/setup-java@v3
+              with:
+                  java-version: '17'
+                  distribution: 'temerium'
+
+            - name: Gradlew permission
+              run: chmod +x gradlew
+
+            - name: Build with Gradle
+              run: ./gradlew build
+
+            - name: Run tests
+              rum: gradlew test
