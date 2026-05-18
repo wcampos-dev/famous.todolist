@@ -27,8 +27,5 @@ jobs:
       - name: Gradlew permission
         run: chmod +x gradlew
 
-      - name: Build with Gradle
-        run: ./gradlew build
-
-      - name: Run tests
-        run: ./gradlew test
+      - name: Build + Test + Coverage
+        run: ./gradlew clean build jacocoTestReport
