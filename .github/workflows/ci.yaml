@@ -27,8 +27,11 @@ jobs:
       - name: Gradlew permission
         run: chmod +x gradlew
 
-      - name: Build with Gradle
-        run: ./gradlew build
+      - name: Build + Test + Coverage
+        run: ./gradlew clean build jacocoTestReport
 
-      - name: Run tests
-        run: ./gradlew test
+      - name: Upload JaCoCo Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: jacoco-report
+          path: build/reports/jacoco/test/html
