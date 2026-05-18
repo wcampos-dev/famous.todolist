@@ -29,3 +29,9 @@ jobs:
 
       - name: Build + Test + Coverage
         run: ./gradlew clean build jacocoTestReport
+
+      - name: Upload JaCoCo Report
+        uses: actions/upload-artifact@v3
+        with:
+          name: jacoco-report
+          path: build/reports/jacoco/test/html
