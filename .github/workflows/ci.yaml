@@ -65,7 +65,7 @@ jobs:
         with:
           repository: wcampos-dev/ci-scripts
           path: scripts
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.READ_ONLY_CI_TOKEN }}
 
       - name: Run version script
         run: ./scripts/release-version.sh
@@ -95,7 +95,7 @@ jobs:
         with:
           repository: wcampos-dev/ci-scripts
           path: scripts
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.READ_ONLY_CI_TOKEN }}
 
       - name: Run version script
         run: ./scripts/release-version.sh
