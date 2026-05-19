@@ -81,13 +81,13 @@ jobs:
         run: ./gradlew test
 
       - name: Create new RC TAG
-        run: git tag -a ${VERSION} -m "Release Candidate ${VERSION}"
+        run: git tag -a VERSION -m "Release Candidate VERSION"
 
       - name: Puch new tag
-        run: git push origin ${VERSION}
+        run: git push origin $VERSION
 
       - name: Build Release Candidate Jar artifact
-        run: ./gradlew clean build -Pversion=RC-${VERSION}
+        run: ./gradlew clean build -Pversion=RC-$VERSION
 
   build-main:
     if: github.ref == 'refs/heads/main' || github.base_ref == 'main'
@@ -122,13 +122,13 @@ jobs:
           echo "New Version: $VERSION"
 
       - name: Create new RC TAG
-        run: git tag -a ${VERSION} -m "Release Candidate ${VERSION}"
+        run: git tag -a $VERSION -m "Release Candidate $VERSION"
 
       - name: Puch new tag
-        run: git push origin ${VERSION}
+        run: git push origin $VERSION
 
       - name: Build final release artifact
-        run: ./gradlew clean build -Pversion=${VERSION}
+        run: ./gradlew clean build -Pversion=$VERSION
       - name: Publicar artefatos finais
         uses: actions/upload-artifact@v4
         with:
