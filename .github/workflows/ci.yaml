@@ -70,12 +70,23 @@ jobs:
       - name: Release version permission
         run: chmod +x ./ci-scripts/scripts/release-version.sh
 
-      - name: Run version script
-        run: ./ci-scripts/scripts/release-version.sh
+      - name: Run version script and export VERSION
+        id: version
+        run: |
+          VERSION=$(./ci-scripts/scripts/release-version.sh)
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          echo "New Version: $VERSION"
 
       - name: Run Testes
         run: ./gradlew test
-      - name: Prepare Release Candidate
+
+      - name: Create new RC TAG
+        run: git create tag -a ${VERSION} -m "Release Candidate ${VERSION}"
+
+      - name: Puch new tag
+        run: git push origin ${VERSION}
+
+      - name: Build Release Candidate Jar artifact
         run: ./gradlew clean build -Pversion=RC-${VERSION}
 
   build-main:
@@ -103,10 +114,14 @@ jobs:
       - name: Release version permission
         run: chmod +x ./ci-scripts/scripts/release-version.sh
 
-      - name: Run version script
-        run: ./scripts/release-version.sh
+      - name: Run version script and export VERSION
+        id: version
+        run: |
+          VERSION=$(./ci-scripts/scripts/release-version.sh)
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          echo "New Version: $VERSION"
 
-      - name: Build final release
+      - name: Build final release artifact
         run: ./gradlew clean build -Pversion=${VERSION}
       - name: Publicar artefatos finais
         uses: actions/upload-artifact@v4
