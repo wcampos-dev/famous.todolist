@@ -63,7 +63,7 @@ jobs:
       - name: Checkout shared scripts
         uses: actions/checkout@v4
         with:
-          repository: wcampos-dev/ci-cripts
+          repository: wcampos-dev/ci-scripts
           path: scripts
           token: ${{ secrets.GITHUB_TOKEN }}
 
@@ -93,7 +93,7 @@ jobs:
       - name: Checkout shared scripts
         uses: actions/checkout@v4
         with:
-          repository: wcampos-dev/ci-cripts
+          repository: wcampos-dev/ci-scripts
           path: scripts
           token: ${{ secrets.GITHUB_TOKEN }}
 
