@@ -70,12 +70,16 @@ jobs:
       - name: Release version permission
         run: chmod +x ./ci-scripts/scripts/release-version.sh
 
+#      - name: Run version script and export VERSION
+#        id: version
+#        run: |
+#          VERSION=$(./ci-scripts/scripts/release-version.sh)
+#          echo "VERSION=$VERSION" >> $GITHUB_ENV
+#          echo "New Version: $VERSION"
+
       - name: Run version script and export VERSION
         id: version
-        run: |
-          VERSION=$(./ci-scripts/scripts/release-version.sh)
-          echo "VERSION=$VERSION" >> $GITHUB_ENV
-          echo "New Version: $VERSION"
+        run: ./ci-scripts/scripts/release-version.sh
 
       - name: Run Testes
         run: ./gradlew test
