@@ -81,9 +81,9 @@ jobs:
         run: ./gradlew test
 
       - name: Create new RC TAG
-        run: git tag -a VERSION -m "Release Candidate VERSION"
+        run: git tag -a $VERSION -m "Release Candidate $VERSION"
 
-      - name: Puch new tag
+      - name: Push new tag
         run: git push origin $VERSION
 
       - name: Build Release Candidate Jar artifact
@@ -124,12 +124,13 @@ jobs:
       - name: Create new RC TAG
         run: git tag -a $VERSION -m "Release Candidate $VERSION"
 
-      - name: Puch new tag
+      - name: Push new tag
         run: git push origin $VERSION
 
       - name: Build final release artifact
         run: ./gradlew clean build -Pversion=$VERSION
-      - name: Publicar artefatos finais
+
+      - name: Publish final release artifact
         uses: actions/upload-artifact@v4
         with:
           name: release
