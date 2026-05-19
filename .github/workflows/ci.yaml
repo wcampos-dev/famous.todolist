@@ -14,7 +14,7 @@ on:
 
 jobs:
   build-develop:
-    if: github.ref == 'refs/heads/develop'
+    if: github.ref == 'refs/heads/develop' || github.base_ref == 'develop'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
@@ -46,7 +46,7 @@ jobs:
             -Dsonar.exclusions=**/src/test/**
 
   build-release:
-    if: startsWith(github.ref, 'refs/heads/release/')
+    if: startsWith(github.ref, 'refs/heads/release/') || startsWith(github.base_ref, 'release/')
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
@@ -76,7 +76,7 @@ jobs:
         run: ./gradlew clean build -Pversion=RC-${VERSION}
 
   build-main:
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main' || github.base_ref == 'main'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
