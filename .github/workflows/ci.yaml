@@ -81,6 +81,9 @@ jobs:
         id: version
         run: ./ci-scripts/scripts/release-version.sh
 
+      - name: Show version
+        run: echo "Version $VERSION"
+
       - name: Run Testes
         run: ./gradlew test
 
