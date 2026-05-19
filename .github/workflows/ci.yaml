@@ -122,7 +122,9 @@ jobs:
           echo "New Version: $VERSION"
 
       - name: Create new RC TAG
-        run: git tag -a $VERSION -m "Release Candidate $VERSION"
+        run: |
+          echo $VERSION
+          git tag -a $VERSION -m "Release Candidate $VERSION"
 
       - name: Push new tag
         run: git push origin $VERSION
