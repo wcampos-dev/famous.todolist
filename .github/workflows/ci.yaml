@@ -64,11 +64,11 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: wcampos-dev/ci-scripts
-          path: scripts
+          path: ci-scripts # Repo to be cloned into /home/runner/work/<$path>
           token: ${{ secrets.READ_ONLY_CI_TOKEN }}
 
       - name: Run version script
-        run: ./scripts/release-version.sh
+        run: ./ci-scripts/scripts/release-version.sh
 
       - name: Run Testes
         run: ./gradlew test
@@ -94,7 +94,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: wcampos-dev/ci-scripts
-          path: scripts
+          path: ./ci-scripts/scripts/release-version.sh
           token: ${{ secrets.READ_ONLY_CI_TOKEN }}
 
       - name: Run version script
