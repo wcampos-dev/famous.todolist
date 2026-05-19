@@ -19,6 +19,10 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
+      - name: Configure Git user from PR author
+        run: |
+          git config --global user.name "${{ github.event.pull_request.user.login }}"
+          git config --global user.email "${{ github.event.pull_request.user.email || 'ci-bot@users.noreply.github.com' }}"
       - name: JDK Configuration
         uses: actions/setup-java@v4
         with:
@@ -51,6 +55,10 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
+      - name: Configure Git user from PR author
+        run: |
+          git config --global user.name "${{ github.event.pull_request.user.login }}"
+          git config --global user.email "${{ github.event.pull_request.user.email || 'ci-bot@users.noreply.github.com' }}"
       - name: JDK Configuration
         uses: actions/setup-java@v4
         with:
@@ -102,6 +110,10 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
+      - name: Configure Git user from PR author
+        run: |
+          git config --global user.name "${{ github.event.pull_request.user.login }}"
+          git config --global user.email "${{ github.event.pull_request.user.email || 'ci-bot@users.noreply.github.com' }}"
       - name: JDK Configuration
         uses: actions/setup-java@v4
         with:
