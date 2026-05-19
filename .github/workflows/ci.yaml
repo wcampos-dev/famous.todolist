@@ -81,7 +81,7 @@ jobs:
         run: ./gradlew test
 
       - name: Create new RC TAG
-        run: git create tag -a ${VERSION} -m "Release Candidate ${VERSION}"
+        run: git tag -a ${VERSION} -m "Release Candidate ${VERSION}"
 
       - name: Puch new tag
         run: git push origin ${VERSION}
@@ -120,6 +120,12 @@ jobs:
           VERSION=$(./ci-scripts/scripts/release-version.sh)
           echo "VERSION=$VERSION" >> $GITHUB_ENV
           echo "New Version: $VERSION"
+
+      - name: Create new RC TAG
+        run: git tag -a ${VERSION} -m "Release Candidate ${VERSION}"
+
+      - name: Puch new tag
+        run: git push origin ${VERSION}
 
       - name: Build final release artifact
         run: ./gradlew clean build -Pversion=${VERSION}
