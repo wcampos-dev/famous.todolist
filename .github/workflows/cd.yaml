@@ -14,7 +14,7 @@ on:
 jobs:
   release-candidate:
     name: Build Release Candidate
-    if: startsWith(github.ref, 'refs/heads/release/')
+    if: startsWith(github.ref, 'refs/heads/release/') || startsWith(github.base_ref, 'release/')
     runs-on: ubuntu-latest
 
     permissions:
@@ -101,11 +101,7 @@ jobs:
         run: chmod +x ./ci-scripts/scripts/release-version.sh
 
       - name: Run version script and export VERSION
-        id: version
-        run: |
-          VERSION=$(./ci-scripts/scripts/release-version.sh)
-          echo "VERSION=$VERSION" >> $GITHUB_ENV
-          echo "New Version: $VERSION"
+        run: ./ci-scripts/scripts/release-version.sh
 
       - name: Create new Production TAG
         run: |
