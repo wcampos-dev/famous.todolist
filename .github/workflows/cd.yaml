@@ -117,5 +117,5 @@ jobs:
       - name: Publish final release artifact
         uses: actions/upload-artifact@v4
         with:
-          name: release
+          name: release-$VERSION
           path: build/libs/*.jar
