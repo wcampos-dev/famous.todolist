@@ -5,6 +5,11 @@ on:
     branches:
       - "release/*"
       - "main"
+  pull_request:
+    branches:
+      - "release/*"
+      - "main"
+
 
 jobs:
   release-candidate:
