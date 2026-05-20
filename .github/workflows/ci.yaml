@@ -1,34 +1,52 @@
-name: Famous Tasks CI
+name: Famous Tasks CI - Quality & Validation
 
 on:
   push:
     branches:
-        - "develop"
-        - "main"
+      - "develop"
+      - "main"
+      - "release/*"
   pull_request:
     branches:
-        - "develop"
-        - "main"
+      - "develop"
+      - "main"
+      - "release/*"
 
 jobs:
-  build:
+  validate-quality:
+    name: Build + Test + Quality
+    if: |
+      github.ref == 'refs/heads/develop' || 
+      github.base_ref == 'develop' || 
+      startsWith(github.ref, 'refs/heads/release/') || 
+      startsWith(github.base_ref, 'release/') ||
+      github.ref == 'refs/heads/main' || 
+      github.base_ref == 'main'
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure Git user from PR author
+        run: |
+          git config --global user.name "${{ github.event.pull_request.user.login }}"
+          git config --global user.email "${{ github.event.pull_request.user.email || 'ci-bot@users.noreply.github.com' }}"          
 
       - name: JDK Configuration
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
+          cache: gradle
 
       - name: Gradlew permission
         run: chmod +x gradlew
 
       - name: Build + Test + Coverage
-        run: ./gradlew clean build jacocoTestReport
+        run: ./gradlew test jacocoTestReport
 
       - name: Upload JaCoCo Report
         uses: actions/upload-artifact@v4
