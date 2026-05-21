@@ -32,7 +32,7 @@ RUN addgroup -S spring && adduser -S spring -G spring
 USER spring:spring
 
 # Copy only Jar previously created in the prior step #1
-COPY --from-build /app/build/libs/*.jar app.jar
+COPY --from=build /app/build/libs/*.jar app.jar
 
 # Optimized JVM configurations for instances with low memory
 # -Xmx: Limits Heap Memory to prevent the container from being killed by OOM (Out of Memory)
