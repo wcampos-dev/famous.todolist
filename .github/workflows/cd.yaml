@@ -48,23 +48,24 @@ jobs:
         id: version
         run: ./ci-scripts/scripts/release-version.sh
 
+      - name: Build Release Candidate Jar artifact
+        run: ./gradlew clean build -Pversion=rc-$VERSION
+
       - name: Create new RC TAG
         run: git tag -a rc-$VERSION -m "Release Candidate rc-$VERSION"
 
       - name: Push new tag
         run: git push origin rc-$VERSION
 
-      - name: Build Release Candidate Jar artifact
-        run: ./gradlew clean build -Pversion=rc-$VERSION
-
   # Baseado no job 'build-main' do ci.yaml original
   production-release:
     name: Build Production Release
-    if: github.ref == 'refs/heads/main' || github.base_ref == 'main'
+    if: github.ref == 'refs/heads/main' || github.base_ref == 'main' || 'refs/heads/docker-pull' || github.base_ref == 'docker-pull'
     runs-on: ubuntu-latest
 
     permissions:
       contents: write
+      packages: write
 
     steps:
       - name: Checkout Code
@@ -98,14 +99,6 @@ jobs:
       - name: Run version script and export VERSION
         run: ./ci-scripts/scripts/release-version.sh
 
-      - name: Create new Production TAG
-        run: |
-          echo $VERSION
-          git tag -a $VERSION -m "Production Release $VERSION"
-
-      - name: Push new tag
-        run: git push origin $VERSION
-
       - name: Build final release artifact
         run: ./gradlew clean build -Pversion=$VERSION
 
@@ -114,3 +107,39 @@ jobs:
         with:
           name: $VERSION
           path: build/libs/*.jar
+
+      # Docker Imagem - Registry
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v6
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push Docker Image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          # Generate current version & latest TAGS
+          tags: |
+            ghcr.io/${{ github.repository }}:latest
+            ghcr.io/${{ github.repository }}:${{ env.VERSION }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # Render updates notification
+      - name: Trigger deploy by Webhook
+        # Trigger deploy only for docker-pull (for test. Update to main)
+        if: github.ref == 'refs/heads/docker-pull' || github.base_ref == 'docker-pull'
+        run: |
+          curl -X POST ${{ secrets.DEPLOY_HOOK_URL }}
+
+      - name: Create new Production TAG
+        run: |
+          echo $VERSION
+          git tag -a $VERSION -m "Production Release $VERSION"
+
+      - name: Push new tag
+        run: git push origin $VERSION
