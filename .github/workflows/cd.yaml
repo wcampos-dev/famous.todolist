@@ -1,0 +1,116 @@
+name: Famous Tasks CD - Release & Deployment
+
+on:
+  push:
+    branches:
+      - "release/*"
+      - "main"
+
+jobs:
+  release-candidate:
+    name: Build Release Candidate
+    if: startsWith(github.ref, 'refs/heads/release/') || startsWith(github.base_ref, 'release/')
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v6
+
+      - name: Configure Git user from PR author
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: JDK Configuration
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: gradle
+
+      - name: Gradlew permission
+        run: chmod +x gradlew
+
+      - name: Checkout shared scripts
+        uses: actions/checkout@v4
+        with:
+          repository: wcampos-dev/ci-scripts
+          path: ci-scripts
+          token: ${{ secrets.READ_ONLY_CI_TOKEN }}
+
+      - name: Release version permission
+        run: chmod +x ./ci-scripts/scripts/release-version.sh
+
+      - name: Run version script and export VERSION
+        id: version
+        run: ./ci-scripts/scripts/release-version.sh
+
+      - name: Create new RC TAG
+        run: git tag -a rc-$VERSION -m "Release Candidate rc-$VERSION"
+
+      - name: Push new tag
+        run: git push origin rc-$VERSION
+
+      - name: Build Release Candidate Jar artifact
+        run: ./gradlew clean build -Pversion=rc-$VERSION
+
+  # Baseado no job 'build-main' do ci.yaml original
+  production-release:
+    name: Build Production Release
+    if: github.ref == 'refs/heads/main' || github.base_ref == 'main'
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v6
+
+      - name: Configure Git user from PR author
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: JDK Configuration
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: gradle
+
+      - name: Gradlew permission
+        run: chmod +x gradlew
+
+      - name: Checkout shared scripts
+        uses: actions/checkout@v4
+        with:
+          repository: wcampos-dev/ci-scripts
+          path: ci-scripts
+          token: ${{ secrets.READ_ONLY_CI_TOKEN }}
+
+      - name: Release version permission
+        run: chmod +x ./ci-scripts/scripts/release-version.sh
+
+      - name: Run version script and export VERSION
+        run: ./ci-scripts/scripts/release-version.sh
+
+      - name: Create new Production TAG
+        run: |
+          echo $VERSION
+          git tag -a $VERSION -m "Production Release $VERSION"
+
+      - name: Push new tag
+        run: git push origin $VERSION
+
+      - name: Build final release artifact
+        run: ./gradlew clean build -Pversion=$VERSION
+
+      - name: Publish final release artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: $VERSION
+          path: build/libs/*.jar

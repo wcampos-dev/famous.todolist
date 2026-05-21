@@ -1,0 +1,67 @@
+name: Famous Tasks CI - Quality & Validation
+
+on:
+  push:
+    branches:
+      - "develop"
+      - "main"
+      - "release/*"
+  pull_request:
+    branches:
+      - "develop"
+      - "main"
+      - "release/*"
+
+jobs:
+  validate-quality:
+    name: Build + Test + Quality
+    if: |
+      github.ref == 'refs/heads/develop' || 
+      github.base_ref == 'develop' || 
+      startsWith(github.ref, 'refs/heads/release/') || 
+      startsWith(github.base_ref, 'release/') ||
+      github.ref == 'refs/heads/main' || 
+      github.base_ref == 'main'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Configure Git user from PR author
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"          
+
+      - name: JDK Configuration
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: gradle
+
+      - name: Gradlew permission
+        run: chmod +x gradlew
+
+      - name: Build + Test + Coverage
+        run: ./gradlew test jacocoTestReport
+
+      - name: Upload JaCoCo Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: jacoco-report
+          path: build/reports/jacoco/test/html
+
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarcloud-github-action@ffc3010689be73b8e5ae0c57ce35968afd7909e8
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        with:
+          args: >
+            -Dsonar.projectKey=wcampos-dev
+            -Dsonar.organization=wcampos-dev
+            -Dsonar.host.url=https://sonarcloud.io
+            -Dsonar.java.binaries=build/classes/java/main,build/classes/java/test
+            -Dsonar.exclusions=**/src/test/**
