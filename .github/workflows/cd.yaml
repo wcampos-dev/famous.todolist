@@ -35,6 +35,12 @@ jobs:
       - name: Gradlew permission
         run: chmod +x gradlew
 
+      - name: Setup Variable
+        id: setup-variable
+        run: |
+          LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v1.0.0")
+          echo "OLD_VERSION=$LAST_TAG" >> GITHUB_ENV
+
       - name: Checkout shared scripts
         uses: actions/checkout@v4
         with:
@@ -48,8 +54,6 @@ jobs:
       - name: Run version script and export VERSION
         id: version
         run: |
-          LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v1.0.0")
-          echo "OLD_VERSION=$LAST_TAG" >> GITHUB_ENV
           ./ci-scripts/scripts/release-version.sh
 
       - name: Build Release Candidate Jar artifact
