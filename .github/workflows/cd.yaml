@@ -47,7 +47,10 @@ jobs:
 
       - name: Run version script and export VERSION
         id: version
-        run: ./ci-scripts/scripts/release-version.sh
+        run: |
+          LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v1.0.0")
+          echo "OLD_VERSION=$LAST_TAG" >> GITHUB_ENV
+          ./ci-scripts/scripts/release-version.sh
 
       - name: Build Release Candidate Jar artifact
         run: ./gradlew clean build -Pversion=rc-$VERSION
