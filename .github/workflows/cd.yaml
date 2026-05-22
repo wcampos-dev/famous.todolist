@@ -104,6 +104,8 @@ jobs:
         id: current-tag
         run: |
           LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v1.0.0")
+          pwd
+          echo "Current Tag $LAST_TAG"
           echo "OLD_VERSION=$LAST_TAG" >> $GITHUB_ENV
 
       #Clone repo with other CD logic scripts
