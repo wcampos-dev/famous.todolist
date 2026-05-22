@@ -20,7 +20,7 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
         with:
-          fetch-deep: 0
+          fetch-depth: 0
 
       - name: Configure Git user from PR author
         run: |
@@ -83,7 +83,7 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
         with:
-          fetch-deep: 0
+          fetch-depth: 0
 
       - name: Configure Git user from PR author
         run: |
@@ -103,9 +103,7 @@ jobs:
       - name: Setup current TAG version
         id: current-tag
         run: |
-          echo `git tag`
           LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v1.0.0")
-          pwd
           echo "Current Tag $LAST_TAG"
           echo "OLD_VERSION=$LAST_TAG" >> $GITHUB_ENV
 
