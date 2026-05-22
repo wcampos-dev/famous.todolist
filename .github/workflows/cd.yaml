@@ -40,23 +40,22 @@ jobs:
         run: |
           LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v1.0.0")
           echo "OLD_VERSION=$LAST_TAG" >> $GITHUB_ENV
-
+      #Clone repo with other CD logic scripts
       - name: Checkout shared scripts
         uses: actions/checkout@v4
         with:
           repository: wcampos-dev/ci-scripts
           path: ci-scripts
           token: ${{ secrets.READ_ONLY_CI_TOKEN }}
-          run: |
-            chmod +x ./ci-scripts/scripts/release-version.sh
-            ./ci-scripts/scripts/release-version.sh
 
 #      - name: Release version permission
 #        run: chmod +x ./ci-scripts/scripts/release-version.sh
 
-#      - name: Run version script and export VERSION
-#        id: version
-#        run: ./ci-scripts/scripts/release-version.sh
+      - name: Execute versioning logic script
+        id: version
+        run: |
+          chmod +x ./ci-scripts/scripts/release-version.sh
+          ./ci-scripts/scripts/release-version.sh
 
       - name: Build Release Candidate Jar artifact
         run: ./gradlew clean build -Pversion=rc-$VERSION
