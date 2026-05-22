@@ -81,7 +81,9 @@ jobs:
 
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
+        with:
+          fetch-deep: 0
 
       - name: Configure Git user from PR author
         run: |
@@ -98,6 +100,13 @@ jobs:
       - name: Gradlew permission
         run: chmod +x gradlew
 
+      - name: Setup current TAG version
+        id: current-tag
+        run: |
+          LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v1.0.0")
+          echo "OLD_VERSION=$LAST_TAG" >> $GITHUB_ENV
+
+      #Clone repo with other CD logic scripts
       - name: Checkout shared scripts
         uses: actions/checkout@v4
         with:
@@ -105,11 +114,11 @@ jobs:
           path: ci-scripts
           token: ${{ secrets.READ_ONLY_CI_TOKEN }}
 
-      - name: Release version permission
-        run: chmod +x ./ci-scripts/scripts/release-version.sh
-
-      - name: Run version script and export VERSION
-        run: ./ci-scripts/scripts/release-version.sh
+      - name: Execute versioning logic script
+        id: version
+        run: |
+          chmod +x ./ci-scripts/scripts/release-version.sh
+          ./ci-scripts/scripts/release-version.sh
 
       - name: Build final release artifact
         run: ./gradlew clean build -Pversion=$VERSION
