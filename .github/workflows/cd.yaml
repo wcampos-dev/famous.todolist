@@ -80,12 +80,21 @@ jobs:
       packages: write
 
     steps:
+      #Checkout main repo
       - name: Checkout Code
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Configure Git user from PR author
+      #Checkout CI/CD dependencies
+      - name: Checkout CI-CD dependencies repo
+        uses: actions/checkout@v4
+        with:
+          repository: wcampos-dev/ci-scripts
+          path: ci-scripts
+          token: ${{ secrets.READ_ONLY_CI_TOKEN }}
+
+      - name: Configure Git bot user into globals
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
@@ -100,22 +109,7 @@ jobs:
       - name: Gradlew permission
         run: chmod +x gradlew
 
-#      - name: Setup current TAG version
-#        id: current-tag
-#        run: |
-#          LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v1.0.0")
-#          echo "Current Tag $LAST_TAG"
-#          echo "OLD_VERSION=$LAST_TAG" >> $GITHUB_ENV
-
-      #Clone repo with other CD logic scripts
-      - name: Checkout shared scripts
-        uses: actions/checkout@v4
-        with:
-          repository: wcampos-dev/ci-scripts
-          path: ci-scripts
-          token: ${{ secrets.READ_ONLY_CI_TOKEN }}
-
-      - name: Execute tag logic script
+      - name: Execute tag logic script using ci-scripts repo
         id: version
         run: |
           chmod +x ./ci-scripts/scripts/release-version.sh
