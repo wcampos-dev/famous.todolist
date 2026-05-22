@@ -54,9 +54,9 @@ jobs:
 #      - name: Release version permission
 #        run: chmod +x ./ci-scripts/scripts/release-version.sh
 
-      - name: Run version script and export VERSION
-        id: version
-        run: ./ci-scripts/scripts/release-version.sh
+#      - name: Run version script and export VERSION
+#        id: version
+#        run: ./ci-scripts/scripts/release-version.sh
 
       - name: Build Release Candidate Jar artifact
         run: ./gradlew clean build -Pversion=rc-$VERSION
