@@ -22,6 +22,14 @@ jobs:
         with:
           fetch-depth: 0
 
+      #Checkout CI/CD dependencies
+      - name: Checkout CI-CD dependencies (private) repo
+        uses: actions/checkout@v4
+        with:
+          repository: wcampos-dev/ci-scripts
+          path: ci-scripts
+          token: ${{ secrets.READ_ONLY_CI_TOKEN }}
+
       - name: Configure Git user from PR author
         run: |
           git config --global user.name "github-actions[bot]"
@@ -37,24 +45,7 @@ jobs:
       - name: Gradlew permission
         run: chmod +x gradlew
 
-      - name: Setup current TAG version
-        id: current-tag
-        run: |
-          LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v1.0.0")
-          echo "OLD_VERSION=$LAST_TAG" >> $GITHUB_ENV
-
-      #Clone repo with other CD logic scripts
-      - name: Checkout shared scripts
-        uses: actions/checkout@v4
-        with:
-          repository: wcampos-dev/ci-scripts
-          path: ci-scripts
-          token: ${{ secrets.READ_ONLY_CI_TOKEN }}
-
-#      - name: Release version permission
-#        run: chmod +x ./ci-scripts/scripts/release-version.sh
-
-      - name: Execute versioning logic script
+      - name: Execute tag logic script using ci-scripts repo
         id: version
         run: |
           chmod +x ./ci-scripts/scripts/release-version.sh
@@ -63,7 +54,13 @@ jobs:
       - name: Build Release Candidate Jar artifact
         run: ./gradlew clean build -Pversion=rc-$VERSION
 
-      - name: Create new RC TAG
+      - name: Publish Release Candidate Jar artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: rc-$VERSION
+          path: build/libs/*.jar
+
+      - name: Create new Release Candidate TAG
         run: git tag -a rc-$VERSION -m "Release Candidate rc-$VERSION"
 
       - name: Push new tag
@@ -87,7 +84,7 @@ jobs:
           fetch-depth: 0
 
       #Checkout CI/CD dependencies
-      - name: Checkout CI-CD dependencies repo
+      - name: Checkout CI-CD dependencies (private) repo
         uses: actions/checkout@v4
         with:
           repository: wcampos-dev/ci-scripts
