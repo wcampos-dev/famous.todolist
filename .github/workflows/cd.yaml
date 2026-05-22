@@ -103,7 +103,7 @@ jobs:
       - name: Setup current TAG version
         id: current-tag
         run: |
-          git tag
+          echo `git tag`
           LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v1.0.0")
           pwd
           echo "Current Tag $LAST_TAG"
