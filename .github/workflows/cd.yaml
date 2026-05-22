@@ -100,12 +100,12 @@ jobs:
       - name: Gradlew permission
         run: chmod +x gradlew
 
-      - name: Setup current TAG version
-        id: current-tag
-        run: |
-          LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v1.0.0")
-          echo "Current Tag $LAST_TAG"
-          echo "OLD_VERSION=$LAST_TAG" >> $GITHUB_ENV
+#      - name: Setup current TAG version
+#        id: current-tag
+#        run: |
+#          LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v1.0.0")
+#          echo "Current Tag $LAST_TAG"
+#          echo "OLD_VERSION=$LAST_TAG" >> $GITHUB_ENV
 
       #Clone repo with other CD logic scripts
       - name: Checkout shared scripts
@@ -115,7 +115,7 @@ jobs:
           path: ci-scripts
           token: ${{ secrets.READ_ONLY_CI_TOKEN }}
 
-      - name: Execute versioning logic script
+      - name: Execute tag logic script
         id: version
         run: |
           chmod +x ./ci-scripts/scripts/release-version.sh
