@@ -1,11 +1,10 @@
 name: Famous Tasks CD - Release & Deployment
 
 on:
-  pull_request:
+  push:
     branches:
       - "release/*"
       - "main"
-      - "docker-pull"
 
 jobs:
   release-candidate:
@@ -15,6 +14,7 @@ jobs:
 
     permissions:
       contents: write
+      packages: write
 
     steps:
       - name: Checkout Code
@@ -69,7 +69,7 @@ jobs:
   # Baseado no job 'build-main' do ci.yaml original
   production-release:
     name: Build Production Release
-    if: github.ref == 'refs/heads/main' || github.base_ref == 'main' || 'refs/heads/docker-pull' || github.base_ref == 'docker-pull'
+    if: github.ref == 'refs/heads/main' || github.base_ref == 'main'
     runs-on: ubuntu-latest
 
     permissions:
@@ -152,7 +152,7 @@ jobs:
       # Render updates notification
       - name: Trigger deploy by Webhook
         # Trigger deploy only for docker-pull (for test. Update to main)
-        if: github.ref == 'refs/heads/docker-pull' || github.base_ref == 'docker-pull'
+        if: github.ref == 'refs/heads/main' || github.base_ref == 'main'
         run: |
           curl -X POST ${{ secrets.DEPLOY_HOOK_URL }}
 
