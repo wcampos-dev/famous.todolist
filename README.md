@@ -1,115 +1,208 @@
-# 📘 TodoList API
+# Famous ToDo List API
 
-## 📖 Overview
-***
+A RESTful task-management API built with **Spring Boot 4.0** and **Java 17**, demonstrating production-ready patterns: layered architecture, input validation, comprehensive test coverage, Docker containerisation, and a fully automated CI/CD pipeline.
 
-This is a simple Spring Boot application for managing tasks (ToDo List).
-It exposes a REST API that allows you to create, list, search, update, and delete tasks.
+> 🌐 **Live demo:** [https://famous-todolist.onrender.com](https://famous-todolist.onrender.com/) ⚠️ Free tier — **allow ~60 seconds** on the first request (cold start).
+ 
+>_Better instructions on how to use live demo in the end of this file_
+---
 
-## 🚀 Technologies
+## Tech Stack
 
-Java 17+
+|Layer|Choice|
+|---|---|
+|Language|Java 17|
+|Framework|Spring Boot 4.0.6 (Web MVC + Spring Data JPA)|
+|ORM|Hibernate / Jakarta Persistence|
+|Database|H2 (in-memory)|
+|Boilerplate|Lombok|
+|Build|Gradle 8 + JaCoCo|
+|Testing|JUnit 5, Mockito, MockMvc, @DataJpaTest|
+|Container|Docker multi-stage (eclipse-temurin:17-jre-alpine)|
+|CI/CD|GitHub Actions → GHCR → Render.com|
 
-Spring Boot
+---
 
-Spring Data JPA
+## Architecture
 
-H2 Database (or another relational database) - Dev Environment
+```
+HTTP Request
+     │
+     ▼
+TaskController       (@RestController)
+     │
+     ▼
+TaskService          (@Service — validation, sanitisation, logging)
+     │
+     ▼
+TaskRepository       (JpaRepository<Task, Long>)
+     │
+     ▼
+H2 Database          (in-memory)
+```
 
-Gradle
+### Domain Model
 
-## ⚙️ API Endpoints
+|Field|Type|Rules|
+|---|---|---|
+|`id`|`Long`|Auto-generated (IDENTITY)|
+|`description`|`String`|Required, max 200 chars, `<>` stripped|
+|`status`|`Status` enum|`PENDING` \| `DOING` \| `DONE` \| `DELETED`|
+
+---
+
+## API Reference
+
+Base URL (local): `http://localhost:8080` Base URL (live): `https://famous-todolist.onrender.com`
+
+|Method|Endpoint|Description|Response|
+|---|---|---|---|
+|`POST`|`/tasks`|Create a task|201, 400|
+|`GET`|`/tasks`|List all tasks|200, 204|
+|`GET`|`/tasks/{id}`|Get task by ID|200, 404|
+|`GET`|`/tasks/status?status=`|Filter by status|200, 204|
+|`GET`|`/tasks/search?keyword=`|Search by keyword (case-insensitive)|200, 204|
+|`PUT`|`/tasks/{id}/status?newStatus=`|Update task status|200, 404|
+|`DELETE`|`/tasks/{id}`|Delete a task|200, 404|
+
 ### Create a task
-`http
-POST /tasks`
+
+```http
+POST /tasks
 Content-Type: application/json
 
-```JSON
 {
-"description": "Create API Rest",
-"status": "PENDING"
+  "description": "Review pull requests",
+  "status": "PENDING"
 }
 ```
-Response:  
-201 Created with the created task object.
-
-### List all tasks
-`http GET /tasks`
-
-Response:  
-JSON list of tasks.
-
-200 OK → task found
-
-204 No Content → No body returned for response
-
-### Get task by ID
-http
-GET /tasks/{id}
-Response:
-
-200 OK → task found
-
-404 Not Found → task not found
-
-### Search tasks by status (PENDING, DOING, DONE, DELETED)
-
-http
-GET /tasks/status?status=PENDING
-
-200 OK → task found
-
-204 No Content → No body returned for response
-
-
-### Search tasks by keyword
-
-http
-GET /tasks/search?keyword=Spring
-Update task status
-http
-PUT /tasks/{id}/status?newStatus=DOING
-Response:  
-Task object with updated status.
-
-### Delete task
-http
-DELETE /tarefas/{id}
-Response:
-
-200 OK → "Task successfully deleted."
-
-404 Not Found → "Task not found."
-
-## 🛠️ How to run the project
-Clone the repository:
-
-```bash
-git clone https://github.com/youruser/todolist.git
+201 Created
+```json
+{
+  "id": 1,
+  "description": "Review pull requests",
+  "status": "PENDING"
+}
 ```
 
-Navigate into the project folder:
+**Validation rules:**
+
+- `description` is required and cannot be blank
+- `description` max length: 200 characters
+- `<` and `>` characters are stripped (basic XSS sanitisation)
+- Invalid `status` value → `400 Bad Request`
+
+---
+
+## Running Locally
+
+**Prerequisites:** Java 17, Git
 
 ```bash
-cd todolist
-```
-
-Build and run with Gradle:
-
-```bash
+git clone https://github.com/wcampos-dev/famous.todolist
+cd famous.todolist
 ./gradlew bootRun
 ```
 
-## Access the API at:
+- API: [http://localhost:8080](http://localhost:8080/)
+- H2 Console: [http://localhost:8080/h2-console](http://localhost:8080/h2-console)
+    - JDBC URL: `jdbc:h2:mem:testdb` | User: `sa` | Password: _(empty)_
 
-```Code
-http://localhost:8080/tasks
+### Run Tests
+
+```bash
+./gradlew test
 ```
 
-## 📌 Notes
-The H2 database runs in memory by default.
+Coverage report: `build/reports/jacoco/test/html/index.html`
 
-To access the H2 console:
+---
 
-Code
-http://localhost:8080/h2-console
+## Docker
+
+Multi-stage build — final image uses `eclipse-temurin:17-jre-alpine` and runs as a non-root user.
+
+```bash
+docker build -t famous-todolist .
+docker run -p 8080:8080 famous-todolist
+```
+
+JVM is tuned for low-memory free-tier hosts:
+
+```
+-Xmx300M -Xms200M -Xss512K -Djava.security.egd=file:/dev/./urandom
+```
+
+---
+
+## Testing
+
+Three complementary test scopes following the testing pyramid:
+
+|Class|Scope|Description|
+|---|---|---|
+|`TaskControllerTest`|`@SpringBootTest` + MockMvc|HTTP routing, status codes, request/response payloads|
+|`TaskServiceTest`|Mockito unit test|Validation, sanitisation, exception paths|
+|`TaskRepositoryTest`|`@DataJpaTest`|Custom JPQL queries against real in-memory H2|
+
+JaCoCo enforces a **70% instruction coverage** gate on every build.
+
+---
+
+## CI / CD Pipeline
+
+### ci.yaml — runs on every push
+
+Checkout → JDK 17 setup → Gradle build → JUnit tests → JaCoCo report artifact
+
+### cd.yaml — release automation
+
+|Job|Trigger|Steps|
+|---|---|---|
+|`release-candidate`|PR to `release/*`|Version script → `rc-vX.Y.Z` tag → Gradle build → push tag|
+|`production-release`|Push to `main`|Version script → Gradle build → Docker push to GHCR → Render deploy hook|
+
+Versioning is handled by a shell script (`release-version.sh`) in another private repo that auto-increments the PATCH component from the latest matching git tag.
+
+---
+
+## Live on Render.com
+
+The API is deployed and publicly accessible. Try it with curl:
+
+```bash
+curl -X POST https://famous-todolist.onrender.com/tasks \
+     -H "Content-Type: application/json" \
+     -d '{"description": "My first remote task", "status": "PENDING"}'
+```
+
+> ⚠️ The free tier spins down after inactivity. The first request may **take ~60 seconds** — subsequent ones will be fast.
+
+---
+
+## Project Structure
+
+```
+famous.todolist/
+├── .github/workflows/
+│   ├── ci.yaml              # Build & test on every push
+│   └── cd.yaml              # Release candidate + production release
+├── src/main/java/dev/wcampos/famous/todolist/
+│   ├── controller/          # TaskController.java
+│   ├── model/               # Task.java, Status.java
+│   ├── repository/          # TaskRepository.java
+│   ├── service/             # TaskService.java
+│   └── Application.java
+├── src/main/resources/
+│   └── application.properties
+├── src/test/                # Controller, Service, Repository tests
+├── Dockerfile
+├── build.gradle
+└── settings.gradle
+```
+
+---
+
+## Author
+
+**wcampos-dev** · [github.com/wcampos-dev](https://github.com/wcampos-dev)
