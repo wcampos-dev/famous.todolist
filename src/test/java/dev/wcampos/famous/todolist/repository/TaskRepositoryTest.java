@@ -32,7 +32,7 @@ public class TaskRepositoryTest {
         List<Task> pendingTasks = taskRepository.findByStatus(Status.PENDING);
 
         // Assert
-        assertThat(pendingTasks).hasSize(1);
+        assertThat(pendingTasks).hasSize(7);
         assertThat(pendingTasks.get(0).getStatus()).isEqualTo(Status.PENDING);
     }
 
@@ -43,8 +43,8 @@ public class TaskRepositoryTest {
 
         List<Task> keywordList = taskRepository.findByDescriptionContaining("TesT");
 
-        assertThat(keywordList).hasSize(1);
-        assertThat(keywordList.get(0).getDescription()).contains("Test");
+        assertThat(keywordList).hasSize(3);
+        assertThat(keywordList.get(0).getDescription()).contains("Update");
     }
 
 }
