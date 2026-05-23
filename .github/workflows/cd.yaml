@@ -124,21 +124,21 @@ jobs:
       # Docker Imagem - Registry
 
       - name: Log in to GitHub Container Registry
-        uses: docker/login-action@v3
+        uses: docker/login-action@650006c6eb7dba73a995cc03b0b2d7f5ca915bee
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@d7f5e7f509e45cec5c76c4d5afdd7de93d0b3df5
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build and push Docker Image
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@f9f3042f7e2789586610d6e8b85c8f03e5195baf
         with:
           context: .
           push: true
@@ -151,10 +151,12 @@ jobs:
 
       # Render updates notification
       - name: Trigger deploy by Webhook
+        env:
+          RENDER_SECRET: ${{ secrets.DEPLOY_HOOK_URL }} # Security fix - avoid disclosure secret in the rum command line
         # Trigger deploy only for docker-pull (for test. Update to main)
         if: github.ref == 'refs/heads/main' || github.base_ref == 'main'
         run: |
-          curl -X POST ${{ secrets.DEPLOY_HOOK_URL }}
+          curl -X POST "$RENDER_SECRET"
 
       - name: Create new Production TAG
         run: |
