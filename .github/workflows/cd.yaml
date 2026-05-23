@@ -1,0 +1,167 @@
+name: Famous Tasks CD - Release & Deployment
+
+on:
+  push:
+    branches:
+      - "release/*"
+      - "main"
+
+jobs:
+  release-candidate:
+    name: Build Release Candidate
+    if: startsWith(github.ref, 'refs/heads/release/') || startsWith(github.base_ref, 'release/')
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+      packages: write
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      #Checkout CI/CD dependencies
+      - name: Checkout CI-CD dependencies (private) repo
+        uses: actions/checkout@v4
+        with:
+          repository: wcampos-dev/ci-scripts
+          path: ci-scripts
+          token: ${{ secrets.READ_ONLY_CI_TOKEN }}
+
+      - name: Configure Git user from PR author
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: JDK Configuration
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: gradle
+
+      - name: Gradlew permission
+        run: chmod +x gradlew
+
+      - name: Execute tag logic script using ci-scripts repo
+        id: version
+        run: |
+          chmod +x ./ci-scripts/scripts/release-version.sh
+          ./ci-scripts/scripts/release-version.sh
+
+      - name: Build Release Candidate Jar artifact
+        run: ./gradlew clean build -Pversion=$VERSION
+
+      - name: Publish Release Candidate Jar artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: $VERSION
+          path: build/libs/*.jar
+
+      - name: Create new Release Candidate TAG
+        run: git tag -a $VERSION -m "Release Candidate $VERSION"
+
+      - name: Push new tag
+        run: git push origin $VERSION
+
+  # Baseado no job 'build-main' do ci.yaml original
+  production-release:
+    name: Build Production Release
+    if: github.ref == 'refs/heads/main' || github.base_ref == 'main'
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+      packages: write
+
+    steps:
+      #Checkout main repo
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      #Checkout CI/CD dependencies
+      - name: Checkout CI-CD dependencies (private) repo
+        uses: actions/checkout@v4
+        with:
+          repository: wcampos-dev/ci-scripts
+          path: ci-scripts
+          token: ${{ secrets.READ_ONLY_CI_TOKEN }}
+
+      - name: Configure Git bot user into globals
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: JDK Configuration
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: gradle
+
+      - name: Gradlew permission
+        run: chmod +x gradlew
+
+      - name: Execute tag logic script using ci-scripts repo
+        id: version
+        run: |
+          chmod +x ./ci-scripts/scripts/release-version.sh
+          ./ci-scripts/scripts/release-version.sh
+
+      - name: Build final release artifact
+        run: ./gradlew clean build -Pversion=$VERSION
+
+      - name: Publish final release artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: $VERSION
+          path: build/libs/*.jar
+
+      # Docker Imagem - Registry
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@650006c6eb7dba73a995cc03b0b2d7f5ca915bee
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@d7f5e7f509e45cec5c76c4d5afdd7de93d0b3df5
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push Docker Image
+        uses: docker/build-push-action@f9f3042f7e2789586610d6e8b85c8f03e5195baf
+        with:
+          context: .
+          push: true
+          # Generate current version & latest TAGS
+          tags: |
+            ghcr.io/${{ github.repository }}:latest
+            ghcr.io/${{ github.repository }}:${{ env.VERSION }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # Render updates notification
+      - name: Trigger deploy by Webhook
+        env:
+          RENDER_SECRET: ${{ secrets.DEPLOY_HOOK_URL }} # Security fix - avoid disclosure secret in the rum command line
+        # Trigger deploy only for docker-pull (for test. Update to main)
+        if: github.ref == 'refs/heads/main' || github.base_ref == 'main'
+        run: |
+          curl -X POST "$RENDER_SECRET"
+
+      - name: Create new Production TAG
+        run: |
+          echo $VERSION
+          git tag -a $VERSION -m "Production Release $VERSION"
+
+      - name: Push new tag
+        run: git push origin $VERSION
